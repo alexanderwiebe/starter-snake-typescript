@@ -35,7 +35,7 @@ export default function runServer(handlers: BattlesnakeHandlers) {
   });
 
   const host = "0.0.0.0";
-  const port = parseInt(process.env.PORT || "8000");
+  const port = parseInt(process.env.PORT || "8080");
 
   if (process.env.NODE_ENV !== "test") {
     app.listen(port, host, () => {
