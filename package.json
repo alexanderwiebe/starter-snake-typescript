@@ -5,7 +5,7 @@
   "description": "An official Battlesnake template written in TypeScript. Get started at play.battlesnake.com.",
   "license": "MIT",
   "scripts": {
-    "build": "tsc",
+    "build": "./node_modules/typescript/bin/tsc",
     "prestart": "npm run build",
     "start": "node ./build/index.js",
     "test": "jest"
