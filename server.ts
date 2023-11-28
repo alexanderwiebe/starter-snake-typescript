@@ -1,4 +1,4 @@
-import express, { Request, Response, NextFunction } from "express"
+import express, { NextFunction, Request, Response } from "express";
 
 export interface BattlesnakeHandlers {
   info: Function;
@@ -29,15 +29,17 @@ export default function runServer(handlers: BattlesnakeHandlers) {
     res.send("ok");
   });
 
-  app.use(function(req: Request, res: Response, next: NextFunction) {
+  app.use(function (req: Request, res: Response, next: NextFunction) {
     res.set("Server", "battlesnake/github/starter-snake-typescript");
     next();
   });
 
-  const host = '0.0.0.0';
-  const port = parseInt(process.env.PORT || '8000');
+  const host = "0.0.0.0";
+  const port = parseInt(process.env.PORT || "8000");
 
-  app.listen(port, host, () => {
-    console.log(`Running Battlesnake at http://${host}:${port}...`);
-  });
+  if (process.env.NODE_ENV !== "test") {
+    app.listen(port, host, () => {
+      console.log(`Running Battlesnake at http://${host}:${port}...`);
+    });
+  }
 }
