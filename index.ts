@@ -10,6 +10,8 @@
 // To get you started we've included code to prevent your Battlesnake from moving backwards.
 // For more info see docs.battlesnake.com
 
+import otherCollide from "./other-collide";
+import selfCollide from "./self-collide";
 import runServer from "./server";
 import { GameState, InfoResponse, MoveResponse } from "./types";
 
@@ -84,44 +86,10 @@ function move(gameState: GameState): MoveResponse {
   }
 
   // TODO: Step 2 - Prevent your Battlesnake from colliding with itself
-  const myBody = gameState.you.body;
-  for (let i = 1; i < myBody.length; i++) {
-    if (myBody[i].x == myHead.x && myBody[i].y == myHead.y - 1) {
-      isMoveSafe.up = false;
-    }
-    if (myBody[i].x == myHead.x && myBody[i].y == myHead.y + 1) {
-      isMoveSafe.down = false;
-    }
-    if (myBody[i].x == myHead.x - 1 && myBody[i].y == myHead.y) {
-      isMoveSafe.left = false;
-    }
-    if (myBody[i].x == myHead.x + 1 && myBody[i].y == myHead.y) {
-      isMoveSafe.right = false;
-    }
-  }
+  isMoveSafe = selfCollide(myHead, gameState.you.body, isMoveSafe);
 
   // TODO: Step 3 - Prevent your Battlesnake from colliding with other Battlesnakes
-  const opponents = gameState.board.snakes;
-  for (let i = 0; i < opponents.length; i++) {
-    const opponentBody = opponents[i].body;
-    for (let j = 0; j < opponentBody.length; j++) {
-      if (opponentBody[j].x == myHead.x && opponentBody[j].y == myHead.y - 1) {
-        isMoveSafe.up = false;
-      }
-      if (opponentBody[j].x == myHead.x && opponentBody[j].y == myHead.y + 1) {
-        isMoveSafe.down = false;
-      }
-      if (opponentBody[j].x == myHead.x - 1 && opponentBody[j].y == myHead.y) {
-        isMoveSafe.left = false;
-      }
-      if (opponentBody[j].x == myHead.x + 1 && opponentBody[j].y == myHead.y) {
-        isMoveSafe.right = false;
-      }
-    }
-  }
-
-  // Choose a random move from the safe moves
-  //
+  isMoveSafe = otherCollide(myHead, gameState.board.snakes, isMoveSafe);
 
   // TODO: Step 4 - Move towards food instead of random, to regain health and survive longer
   const food = gameState.board.food;
@@ -172,30 +140,48 @@ function move(gameState: GameState): MoveResponse {
   const desiredMoves = Object.keys(isMoveDesired).filter(
     (key) => isMoveDesired[key]
   );
+
+  //Backup
   if (safeMoves.length == 0 && desiredMoves.length == 0) {
-    console.log(`MOVE ${gameState.turn}: No safe moves detected! Moving down`);
     return { move: "down" };
   }
   if (desiredMoves.length == 0) {
     // random safe move
     const nextMove = safeMoves[Math.floor(Math.random() * safeMoves.length)];
-    console.log(
-      `MOVE ${gameState.turn}: No desired moves detected! Moving ${nextMove}`
-    );
     return { move: nextMove };
   }
 
   let desiredSafeMoves: string[] = [];
   safeMoves.forEach((move) => {
     if (desiredMoves.includes(move)) {
-      desiredMoves.push(move);
+      desiredSafeMoves.push(move);
     }
   });
 
-  const nextMove =
+  if (desiredSafeMoves.length == 0) {
+    desiredSafeMoves = safeMoves; // you can try sometimes but you just might find
+    // you get what you need
+  }
+
+  // todo should figure out metric on safer moves
+  let nextMove =
     desiredSafeMoves[Math.floor(Math.random() * desiredSafeMoves.length)];
 
-  console.log(`MOVE ${gameState.turn}: ${nextMove}`);
+  if (desiredSafeMoves.length == 1) {
+    nextMove = desiredSafeMoves[0];
+  } else {
+    // todo optimize for space?
+    // todo optimize for food?
+    // todo optimize for eliminating other snakes?
+  }
+
+  if (!nextMove) {
+    console.error(`MOVE ${gameState.turn}: Moving ${nextMove}`);
+    console.error(`PANIC`);
+    return {
+      move: ["up", "down", "left", "right"][Math.floor(Math.random() * 4)],
+    };
+  }
   return { move: nextMove };
 }
 
